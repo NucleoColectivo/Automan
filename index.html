@@ -97,7 +97,19 @@ const SUPERPOWER_CONFIG = {
     'dilema': { label: 'Dilema Filosófico', command: '/dilema', requiresArg: false },
 };
 
-const API_KEY = ""; // Tu clave de API aquí si es necesaria
+// --- ATENCIÓN: CLAVE DE API ---
+// Para que la IA funcione, necesitas una clave de API de Google AI Studio (Gemini).
+// 1. Obtén tu clave aquí: https://aistudio.google.com/app/apikey
+// 2. PÉGALA a continuación en la variable API_KEY.
+//
+// ¡ADVERTENCIA DE SEGURIDAD!
+// Publicar tu clave de API en un sitio público como GitHub Pages es RIESGOSO.
+// Cualquiera podría usar tu clave. Para reducir el riesgo:
+// - Ve a https://console.cloud.google.com/apis/credentials
+// - Busca tu clave de API.
+// - En "Restricciones de la aplicación", selecciona "Sitios web" y añade la URL de tu GitHub Pages (ej: https://tu-usuario.github.io/tu-repo/*).
+const API_KEY = "AIzaSyAVM2vjF_wtLvHw58_j1RcqEXso-WWdeYg"; // <-- PEGA TU CLAVE DE API DE GOOGLE AI STUDIO AQUÍ
+
 const CHAT_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
 const IMAGE_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${API_KEY}`;
 const TTS_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
@@ -846,3 +858,5 @@ const MainController = () => {
         </div>
     );
 };
+
+
