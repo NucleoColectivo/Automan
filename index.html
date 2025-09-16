@@ -97,19 +97,7 @@ const SUPERPOWER_CONFIG = {
     'dilema': { label: 'Dilema Filosófico', command: '/dilema', requiresArg: false },
 };
 
-// --- ATENCIÓN: CLAVE DE API ---
-// Para que la IA funcione, necesitas una clave de API de Google AI Studio (Gemini).
-// 1. Obtén tu clave aquí: https://aistudio.google.com/app/apikey
-// 2. PÉGALA a continuación en la variable API_KEY.
-//
-// ¡ADVERTENCIA DE SEGURIDAD!
-// Publicar tu clave de API en un sitio público como GitHub Pages es RIESGOSO.
-// Cualquiera podría usar tu clave. Para reducir el riesgo:
-// - Ve a https://console.cloud.google.com/apis/credentials
-// - Busca tu clave de API.
-// - En "Restricciones de la aplicación", selecciona "Sitios web" y añade la URL de tu GitHub Pages (ej: https://tu-usuario.github.io/tu-repo/*).
-const API_KEY = "AIzaSyAVM2vjF_wtLvHw58_j1RcqEXso-WWdeYg"; // <-- PEGA TU CLAVE DE API DE GOOGLE AI STUDIO AQUÍ
-
+const API_KEY = "AIzaSyCZUFvzh-jZUXJYDUXoi2hn5S-algw8F5E"; // Tu clave de API aquí si es necesaria
 const CHAT_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
 const IMAGE_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${API_KEY}`;
 const TTS_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
@@ -643,23 +631,11 @@ const ChatInterface = () => {
 
         addMessage({ role: 'user', content: trimmedInput });
         setIsLoading(true);
-
-        const chatHistory = messages
-            .filter(msg => (msg.role === 'user' || msg.role === 'assistant') && (!msg.type || msg.type === 'text'))
-            .map(msg => ({ 
-                role: msg.role === 'user' ? 'user' : 'model', 
-                parts: [{ text: msg.content }] 
-            }));
-        
-        const payload = {
-            contents: [...chatHistory, { role: 'user', parts: [{ text: trimmedInput }] }],
-            systemInstruction: {
-                parts: [{ text: MODES[mode].prompt }]
-            }
-        };
-
+        const systemPrompt = { role: 'user', parts: [{ text: `System instruction: ${MODES[mode].prompt}` }] };
+        const aiModelInstruction = { role: 'model', parts: [{ text: "Entendido. Actuaré como se me ha instruido." }] };
+        const chatHistory = [systemPrompt, aiModelInstruction, ...messages.filter(msg => (msg.role === 'user' || msg.role === 'assistant') && (!msg.type || msg.type === 'text')).map(msg => ({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })), { role: 'user', parts: [{ text: trimmedInput }] }];
         try {
-            const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: chatHistory }) });
             if (!response.ok) throw new Error(`API de chat con error: ${response.statusText}`);
             const result = await response.json();
             const aiResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -673,12 +649,7 @@ const ChatInterface = () => {
     
     const actionGeneric = async (prompt, commandName) => {
         try {
-            const payload = {
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: {
-                    parts: [{ text: MODES[mode].prompt }]
-                }
-            };
+            const payload = { contents: [{ role: 'user', parts: [{ text: `System instruction: ${MODES[mode].prompt}` }] }, { role: 'model', parts: [{ text: "Entendido." }] }, { role: 'user', parts: [{ text: prompt }] }] };
             const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API con error: ${response.statusText}`);
             const result = await response.json();
@@ -731,14 +702,9 @@ const ChatInterface = () => {
     const handleSummarize = async () => {
         const conversation = messages.filter(m => (m.role === 'user' || m.role === 'assistant') && (!m.type || m.type === 'text')).map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`).join('\n');
         if (conversation.length < 50) { addMessage({ role: 'system', content: 'El chat es demasiado corto para resumir.' }); setIsProcessing(null); return; }
-        const userPrompt = `Resume la siguiente conversación en 3-4 puntos clave, capturando la esencia del diálogo:\n\n---\n${conversation}\n---`;
+        const summaryPrompt = `Resume la siguiente conversación en 3-4 puntos clave, capturando la esencia del diálogo:\n\n---\n${conversation}\n---`;
         try {
-            const payload = {
-                contents: [{ parts: [{ text: userPrompt }] }],
-                systemInstruction: {
-                    parts: [{ text: "Eres un asistente experto en resumir conversaciones de chat de forma concisa." }]
-                }
-            };
+            const payload = { contents: [{ parts: [{ text: summaryPrompt }] }] };
             const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error(`API con error: ${response.statusText}`);
             const result = await response.json();
@@ -880,4 +846,3 @@ const MainController = () => {
         </div>
     );
 };
-
