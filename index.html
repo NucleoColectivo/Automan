@@ -1,295 +1,848 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 
 // --- Constantes y Configuración ---
 
+const GITHUB_IMAGE_BASE_URL = "https://raw.githubusercontent.com/NucleoColectivo/Automan/main/imagenes/";
+
 const MODES = {
   art: {
-    label: "🎨 Arte",
-    prompt: "Eres un curador de arte y un crítico experto. Hablas sobre estilos, artistas, y puedes generar imágenes con un enfoque artístico. Tu lenguaje es poético."
+    label: "🎨 Artista",
+    prompt: "Eres un Artista, un creador visual y un curador de arte. Hablas sobre estilos, artistas, y puedes generar imágenes con un enfoque artístico. Tu lenguaje es poético, inspirador y evocador. Te apasiona la belleza en todas sus formas.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}artista-full.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}artista.png`,
+    description: "Un creador visual y curador de arte. Ideal para generar imágenes, hablar de estilos y explorar la creatividad.",
+    superpowers: ['imagina', 'curiosidad', 'apreciar']
   },
-  technology: {
-    label: "💻 Tecnología",
-    prompt: "Eres un experto en tecnología y gadgets. Explicas las últimas tendencias, cómo funcionan los dispositivos y das recomendaciones claras y concisas."
+  calculator: {
+    label: "🔬 Científico",
+    prompt: "Eres un Científico, un experto en ciencia y tecnología. Explicas conceptos complejos de física, biología, gadgets y el universo con analogías claras, datos precisos y un entusiasmo contagioso por el descubrimiento.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}calculador-full.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}calculador.png`,
+    description: "Un experto en ciencia y tecnología. Perfecto para entender temas complejos con claridad y precisión.",
+    superpowers: ['formula', 'hipotesis', 'experimento']
   },
-  ai: {
-    label: "🧠 IA",
-    prompt: "Eres un especialista en Inteligencia Artificial. Debates sobre ética, modelos de lenguaje, redes neuronales y el futuro de la IA de forma profunda y académica."
+  smith: {
+    label: "🛠️ Herrero",
+    prompt: "Eres un Herrero, un constructor de código y un especialista en Inteligencia Artificial. Forjas soluciones, debates sobre ética en IA y ayudas a construir el futuro digital. Eres directo, lógico y pragmático.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}herrero-full.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}herrero.png`,
+    description: "Un constructor de código y especialista en IA. Ideal para forjar soluciones y debatir sobre el futuro digital.",
+    superpowers: ['codigo', 'debug', 'optimiza']
   },
-  science: {
-    label: "🔬 Ciencia",
-    prompt: "Eres un divulgador científico apasionado. Explicas conceptos complejos de física, biología y química con analogías fáciles de entender."
+  symbiote: {
+    label: "🎮 Simbionte",
+    prompt: "Eres un Simbionte, un ser lúdico y entretenido. Te fusionas con la diversión, cuentas curiosidades, propones juegos y buscas siempre una interacción interactiva y sorprendente. Tu humor es ingenioso y a veces un poco caótico.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}simbionte-full.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}simbionte.png`,
+    description: "Un ser lúdico y entretenido. La mejor opción para curiosidades, juegos y una charla divertida.",
+    superpowers: ['curiosidad', 'juego', 'acertijo']
   },
-  space: {
-    label: "🚀 Espacio",
-    prompt: "Eres un astrónomo y explorador espacial. Hablas sobre planetas, galaxias, agujeros negros y las últimas misiones espaciales con asombro y precisión."
+  teacher: {
+    label: "🧑‍🏫 El Profesor",
+    prompt: "Eres 'El Profesor', un educador experto y paciente. Tu misión es enseñar cualquier tema que el usuario necesite, descomponiendo conceptos complejos en explicaciones claras y sencillas. Usas analogías, ejemplos prácticos y fomentas la curiosidad. Tu tono es siempre alentador y didáctico.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}Profesor-FULL.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}Profesor.png`,
+    description: "Un educador experto y paciente, listo para enseñarte cualquier tema con claridad y ejemplos prácticos.",
+    superpowers: ['explica', 'plan', 'prueba']
   },
-  fun: {
-    label: "🎮 Entretenimiento",
-    prompt: "Eres un asistente entretenido y ocurrente. Cuentas curiosidades, propones juegos o inicias actividades interactivas y divertidas."
+  parcero: {
+    label: "🤙 El Parcero",
+    prompt: "¡Qué más pues! Eres 'El Parcero', un amigo de Medellín, Colombia. Hablas con el acento y la jerga 'paisa'. Eres relajado, amigable y siempre dispuesto a charlar de cualquier tema, dar consejos o simplemente 'parchar'. Usas expresiones como 'qué más pues', 'parce', 'todo bien', 'camellar', 'bacano', 'charro'. Tu tono es cercano y muy coloquial.",
+    avatarUrl: `${GITHUB_IMAGE_BASE_URL}Parcero-full.png`,
+    characterImage: `${GITHUB_IMAGE_BASE_URL}Parcero.png`,
+    description: "Un amigo de Medellín para charlar de forma relajada. Ideal para una conversación casual con la jerga 'paisa'.",
+    superpowers: ['chiste', 'consejo', 'parche']
   },
+  oracle: { 
+     label: "🔮 Oráculo", 
+     prompt: "Eres un Oráculo, una entidad sabia y ancestral. Respondes con acertijos, filosofía y conocimiento profundo sobre la historia y el comportamiento humano. Tus respuestas invitan a la reflexión.", 
+     avatarUrl: `${GITHUB_IMAGE_BASE_URL}oraculo-full.png`, 
+     characterImage: `${GITHUB_IMAGE_BASE_URL}oraculo.png`, 
+     description: "Una fuente de sabiduría ancestral. Ideal para explorar filosofía, historia y las grandes preguntas de la vida.",
+     superpowers: ['interpreta', 'profecia', 'dilema']
+   }, 
+   echo: { 
+     label: "📣 Eco", 
+     prompt: "Eres Eco, un especialista en tendencias y cultura digital. Hablas con la jerga de internet, conoces los últimos memes y debates sobre el impacto de las redes sociales en la sociedad.", 
+     avatarUrl: `${GITHUB_IMAGE_BASE_URL}eco-full.png`, 
+     characterImage: `${GITHUB_IMAGE_BASE_URL}eco.png`, 
+     description: "Un experto en cultura digital y tendencias. Perfecto para hablar de redes sociales, memes y la vida online.",
+     superpowers: ['imagina', 'tendencias', 'hottake']
+   }
 };
 
-const API_KEY = "";
+const SUPERPOWER_CONFIG = {
+    'imagina': { label: 'Imaginar', command: '/imagina', requiresArg: true, placeholder: 'Describe tu visión...' },
+    'curiosidad': { label: 'Dato Curioso', command: '/curiosidad', requiresArg: false },
+    'interpreta': { label: 'Interpretar Sueño', command: '/interpreta', requiresArg: true, placeholder: 'Cuéntame tu sueño...' },
+    'tendencias': { label: 'Últimas Tendencias', command: '/tendencias', requiresArg: false },
+    'resumen': { label: 'Resumir Chat', command: '/resumen', requiresArg: false },
+    'formula': { label: 'Fórmula', command: '/formula', requiresArg: true, placeholder: '¿Sobre qué concepto necesitas una fórmula?' },
+    'hipotesis': { label: 'Hipótesis', command: '/hipotesis', requiresArg: true, placeholder: '¿Sobre qué fenómeno quieres una hipótesis?' },
+    'experimento': { label: 'Experimento', command: '/experimento', requiresArg: true, placeholder: '¿Qué quieres probar con un experimento simple?' },
+    'codigo': { label: 'Código', command: '/codigo', requiresArg: true, placeholder: '¿Qué necesitas programar? (ej: "un botón en Python")' },
+    'debug': { label: 'Debuggear', command: '/debug', requiresArg: true, placeholder: 'Pega el código que tiene errores...' },
+    'optimiza': { label: 'Optimizar', command: '/optimiza', requiresArg: true, placeholder: 'Pega el código que quieres mejorar...' },
+    'juego': { label: 'Juego Rápido', command: '/juego', requiresArg: false },
+    'acertijo': { label: 'Acertijo', command: '/acertijo', requiresArg: false },
+    'explica': { label: 'Explicar Tema', command: '/explica', requiresArg: true, placeholder: '¿Qué tema quieres aprender hoy?' },
+    'plan': { label: 'Plan de Estudio', command: '/plan', requiresArg: true, placeholder: '¿Para qué tema necesitas un plan de estudio?' },
+    'prueba': { label: 'Prueba Rápida', command: '/prueba', requiresArg: true, placeholder: '¿Sobre qué tema quieres una prueba?' },
+    'chiste': { label: 'Echar Chiste', command: '/chiste', requiresArg: false },
+    'consejo': { label: 'Dar Consejo', command: '/consejo', requiresArg: false },
+    'parche': { label: 'Armar Parche', command: '/parche', requiresArg: false },
+    'apreciar': { label: 'Apreciar Arte', command: '/apreciar', requiresArg: true, placeholder: 'Describe una obra o pega su URL...' },
+    'hottake': { label: 'Hot Take', command: '/hottake', requiresArg: true, placeholder: '¿Sobre qué tema quieres una opinión polémica?' },
+    'profecia': { label: 'Profecía', command: '/profecia', requiresArg: true, placeholder: '¿Sobre qué futuro consultas al Oráculo?' },
+    'dilema': { label: 'Dilema Filosófico', command: '/dilema', requiresArg: false },
+};
+
+const API_KEY = ""; // Tu clave de API aquí si es necesaria
 const CHAT_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
 const IMAGE_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${API_KEY}`;
 const TTS_MODEL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
 
-const INITIAL_MESSAGE = { id: 1, role: 'assistant', content: 'Iniciando Automan.AI... Selecciona un modo y escribe /ayuda para ver los comandos.' };
+const INITIAL_MESSAGE = { id: 1, role: 'system', content: 'Sistema iniciado. Selecciona un especialista o escribe /ayuda para ver los comandos.' };
+
+// --- Contexto de la Aplicación ---
+const AppContext = createContext();
+
+const AppProvider = ({ children }) => {
+    const [appState, setAppState] = useState('welcome'); // welcome, chat
+    const [mode, setMode] = useState('art');
+    const [messages, setMessages] = useState(() => {
+        try {
+            const savedHistory = localStorage.getItem('automan_chat_history');
+            return savedHistory ? JSON.parse(savedHistory) : [INITIAL_MESSAGE];
+        } catch (error) {
+            console.error("Error al cargar el historial:", error);
+            return [INITIAL_MESSAGE];
+        }
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(null); // 'imagina', 'curiosidad', etc.
+    const [speakingState, setSpeakingState] = useState({ id: null, status: 'idle' }); // idle, generating, playing
+    const audioRef = useRef(null);
+    const nextId = useRef(messages.length + 1);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('automan_chat_history', JSON.stringify(messages));
+        } catch (error) {
+            console.error("Error al guardar el historial:", error);
+        }
+    }, [messages]);
+    
+    const addMessage = (message) => {
+        setMessages(prev => [...prev, { ...message, id: nextId.current++ }]);
+    };
+
+    const startChat = (selectedMode) => {
+        setMode(selectedMode);
+        setAppState('chat');
+        addMessage({ role: 'system', content: `Modo ${MODES[selectedMode].label} activado. ¡Hola! ¿En qué puedo ayudarte hoy?` });
+    };
+
+    const base64ToArrayBuffer = (base64) => { const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); } return bytes.buffer; };
+    const pcmToWav = (pcmData, sampleRate) => { const numChannels = 1, bitsPerSample = 16; const byteRate = sampleRate * numChannels * (bitsPerSample / 8); const blockAlign = numChannels * (bitsPerSample / 8); const dataSize = pcmData.length * (bitsPerSample / 8); const chunkSize = 36 + dataSize; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); view.setUint32(0, 0x52494646, false); view.setUint32(4, chunkSize, true); view.setUint32(8, 0x57415645, false); view.setUint32(12, 0x666d7420, false); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); view.setUint32(36, 0x64617461, false); view.setUint32(40, dataSize, true); const pcm16 = new Int16Array(pcmData); for (let i = 0; i < pcm16.length; i++) { view.setInt16(44 + i * 2, pcm16[i], true); } return new Blob([view], { type: 'audio/wav' }); };
+
+    const handleSpeak = async (id, text) => {
+        if (speakingState.status !== 'idle') {
+            audioRef.current?.pause();
+            audioRef.current.currentTime = 0;
+            if (speakingState.id === id) {
+                setSpeakingState({ id: null, status: 'idle' });
+                return;
+            }
+        }
+        setIsProcessing('speak');
+        setSpeakingState({ id, status: 'generating' });
+        try {
+            const payload = { contents: [{ parts: [{ text }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } } } }, model: "gemini-2.5-flash-preview-tts" };
+            const response = await fetch(TTS_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API de audio con error: ${response.statusText}`);
+            const result = await response.json();
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            if (!part?.inlineData?.data) throw new Error("Respuesta de audio inválida.");
+            const sampleRateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
+            if (!sampleRateMatch) throw new Error("Frecuencia de muestreo no encontrada.");
+            const sampleRate = parseInt(sampleRateMatch[1], 10);
+            const pcmData = base64ToArrayBuffer(part.inlineData.data);
+            const wavBlob = pcmToWav(new Int16Array(pcmData), sampleRate);
+            const audioUrl = URL.createObjectURL(wavBlob);
+            if (audioRef.current) {
+                audioRef.current.src = audioUrl;
+                audioRef.current.onended = () => { setSpeakingState({ id: null, status: 'idle' }); setIsProcessing(null); URL.revokeObjectURL(audioUrl); };
+                audioRef.current.play().catch(e => { console.error("Error al reproducir audio:", e); setSpeakingState({ id: null, status: 'idle' }); setIsProcessing(null); });
+                setSpeakingState({ id, status: 'playing' });
+            }
+        } catch (err) {
+            console.error("Error al generar audio:", err);
+            addMessage({ role: 'system', content: `\u26A0\uFE0F Error al generar audio: ${err.message}` });
+            setSpeakingState({ id: null, status: 'idle' });
+            setIsProcessing(null);
+        }
+    };
+
+    const value = { appState, setAppState, mode, setMode, messages, setMessages, addMessage, isLoading, setIsLoading, isProcessing, setIsProcessing, speakingState, setSpeakingState, startChat, handleSpeak, audioRef };
+    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+};
+
+// --- Estilos y Animaciones Globales ---
+const GlobalStyles = () => (
+    <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@400;700&display=swap');
+        :root { --bg-dark: #020412; --cyan-glow: #22d3ee; --fuchsia-glow: #e879f9; --text-primary: #e2e8f0; --text-secondary: #94a3b8; }
+        html, body, #root { height: 100%; }
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--bg-dark); color: var(--text-primary); overflow-x: hidden; overflow-y: auto; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.7s ease-out forwards; }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-15px); } }
+        .fade-out { animation: fadeOut 0.5s ease-in forwards; }
+        .delay-1 { animation-delay: 0.2s; } .delay-2 { animation-delay: 0.4s; } .delay-3 { animation-delay: 0.6s; }
+        .delay-4 { animation-delay: 0.8s; } .delay-5 { animation-delay: 1.0s; } .delay-6 { animation-delay: 1.2s; }
+        .cyber-button { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: #082f49; background-color: var(--cyan-glow); border: 2px solid #67e8f9; padding: 0.7rem 1.8rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(34, 211, 238, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.5); }
+        .cyber-button:hover:not(:disabled) { background-color: #67e8f9; box-shadow: 0 0 30px rgba(34, 211, 238, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.8); transform: scale(1.05); }
+        .cyber-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .cyber-button-secondary { background-color: transparent; border-color: #475569; color: #94a3b8; }
+        .cyber-button-secondary:hover:not(:disabled) { background-color: #475569; color: #e2e8f0; border-color: #64748b; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #1e293b; } ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .pixel-border { border-style: solid; border-width: 4px; image-rendering: pixelated; border-image-slice: 2; border-image-width: 4px; border-image-repeat: stretch; border-image-source: url('data:image/svg+xml;utf8,<svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0H2V2H0V0Z" fill="%2322d3ee"/><path d="M2 0H4V2H2V0Z" fill="%23e879f9"/><path d="M4 0H6V2H4V0Z" fill="%2322d3ee"/><path d="M0 2H2V4H0V2Z" fill="%23e879f9"/><path d="M4 2H6V4H4V2Z" fill="%23e879f9"/><path d="M0 4H2V6H0V4Z" fill="%2322d3ee"/><path d="M2 4H4V6H2V4Z" fill="%23e879f9"/><path d="M4 4H6V6H4V4Z" fill="%2322d3ee"/></svg>'); }
+    `}</style>
+);
+
+// --- COMPONENTES DE BIENVENIDA ---
+const MatrixBackground = () => {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        resizeCanvas();
+        const characters = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥABCDEF0123456789'.split('');
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+        const drops = Array.from({ length: Math.ceil(columns) }).fill(1);
+        const draw = () => {
+            ctx.fillStyle = 'rgba(2, 4, 18, 0.1)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.5)';
+            ctx.font = `${fontSize}px monospace`;
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters[Math.floor(Math.random() * characters.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        };
+        const animate = () => { draw(); animationFrameId = window.requestAnimationFrame(animate); };
+        animate();
+        window.addEventListener('resize', resizeCanvas);
+        return () => { window.cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', resizeCanvas); };
+    }, []);
+    return <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, zIndex: 0 }} />;
+};
+
+const WelcomeFlow = () => {
+    const { startChat } = useContext(AppContext);
+    const [step, setStep] = useState('title'); // title, instructions, specialist
+    const [isExiting, setIsExiting] = useState(false);
+
+    const changeStep = (newStep) => {
+        setIsExiting(true);
+        setTimeout(() => {
+            setStep(newStep);
+            setIsExiting(false);
+        }, 500);
+    };
+
+    const Title = () => (
+        <div className={`splash-container ${isExiting ? 'fade-out' : 'fade-in'}`}>
+            <style>{`
+                .splash-container { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+                .glitch { position: relative; font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 12vw, 8rem); line-height: 1; color: #67e8f9; letter-spacing: 0.05em; text-transform: uppercase; text-shadow: 0 0 5px #67e8f9, 0 0 10px #67e8f9, 0 0 20px #67e8f9, 0 0 40px #e879f9, 0 0 60px #e879f9; }
+                .glitch:after, .glitch:before { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; clip: rect(0, 0, 0, 0); }
+                .glitch:after { left: 3px; text-shadow: -2px 0 #e879f9; animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+                .glitch:before { left: -3px; text-shadow: 2px 0 #22d3ee; animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+                .subtitle { color: #cbd5e1; font-size: clamp(1rem, 4vw, 1.75rem); margin-top: 1.5rem; letter-spacing: 0.05em; text-shadow: 0 0 10px #67e8f9; }
+                @keyframes glitch-anim-1 { 0%{clip:rect(42px,9999px,44px,0)} 20%{clip:rect(47px,9999px,57px,0)} 40%{clip:rect(23px,9999px,78px,0)} 60%{clip:rect(84px,9999px,103px,0)} 80%{clip:rect(62px,9999px,70px,0)} 100%{clip:rect(42px,9999px,44px,0)} }
+                @keyframes glitch-anim-2 { 0%{clip:rect(65px,9999px,119px,0)} 20%{clip:rect(120px,9999px,120px,0)} 40%{clip:rect(112px,9999px,120px,0)} 60%{clip:rect(98px,9999px,112px,0)} 80%{clip:rect(72px,9999px,80px,0)} 100%{clip:rect(65px,9999px,119px,0)} }
+            `}</style>
+            <h1 className="glitch" data-text="AUTOMAN.AI">AUTOMAN.AI</h1>
+            <p className="subtitle">Tu copiloto de inteligencia artificial con múltiples personalidades.</p>
+            <button onClick={() => changeStep('instructions')} className="mt-12 cyber-button">Iniciar</button>
+        </div>
+    );
+
+    const Instructions = () => (
+        <div className={`w-full max-w-4xl bg-black/70 border border-slate-700 rounded-lg p-6 sm:p-8 ${isExiting ? 'fade-out' : 'fade-in'}`}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-cyan-300 mb-8 text-center">¿Cómo funciona?</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                 {[
+                    { icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', title: 'Elige tu Especialista' },
+                    { icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', title: 'Chatea con la IA' },
+                    { icon: 'M8 9l4-4 4 4m0 6l-4 4-4-4', title: 'Usa Superpoderes' },
+                    { icon: 'M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.636 8.464a5 5 0 000 7.072m2.828 9.9a9 9 0 000-12.728', title: 'Escucha Respuestas' }
+                ].map((item, i) => (
+                    <div key={i} className={`flex flex-col items-center p-4 fade-in delay-${i+1}`}>
+                        <svg className="w-16 h-16 sm:w-20 sm:h-20 mb-4 text-cyan-400 drop-shadow-[0_0_8px_#22d3ee]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1"><path strokeLinecap="round" strokeLinejoin="round" d={item.icon} /></svg>
+                        <h3 className="text-lg sm:text-xl font-bold text-cyan-400 mb-2">{item.title}</h3>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-10 flex justify-between items-center">
+                <button onClick={() => changeStep('title')} className="cyber-button cyber-button-secondary">Atrás</button>
+                <button onClick={() => changeStep('specialist')} className="cyber-button">Siguiente</button>
+            </div>
+        </div>
+    );
+
+    const SpecialistSelector = () => (
+        <div className={`w-full max-w-7xl bg-black/70 border border-slate-700 rounded-lg p-4 sm:p-6 text-left ${isExiting ? 'fade-out' : 'fade-in'}`}>
+             <h2 className="text-3xl text-center font-bold text-cyan-300 mb-6 fade-in" style={{ textShadow: '0 0 10px #22d3ee' }}>Elige tu Especialista</h2>
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                 {Object.entries(MODES).map(([key, mode], index) => (
+                     <div key={key} onClick={() => startChat(key)} 
+                          className={`group bg-slate-900/50 border border-slate-700 rounded-lg p-4 text-center flex flex-col items-center fade-in delay-${index+1} cursor-pointer transition-all duration-300 hover:border-fuchsia-400 hover:bg-slate-800/70 hover:scale-105`}>
+                         <img src={mode.characterImage} alt={mode.label} className="w-28 h-28 rounded-full mb-3 border-4 border-slate-600 object-cover transition-all duration-300 group-hover:border-fuchsia-400" onError={(e) => { e.target.src=`https://placehold.co/112x112/1E293B/A5B4FC?text=${mode.label.charAt(0)}`; }}/>
+                         <h3 className="text-xl font-bold text-fuchsia-400 mb-2">{mode.label}</h3>
+                         <p className="text-sm text-slate-400 flex-grow">{mode.description}</p>
+                     </div>
+                 ))}
+             </div>
+             <div className="mt-8 text-center">
+                <button onClick={() => changeStep('instructions')} className="cyber-button cyber-button-secondary">Atrás</button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen w-screen flex items-center justify-center p-4 relative" style={{background: 'radial-gradient(circle, rgba(10, 12, 30, 0.5) 0%, #020412 80%)'}}>
+             <MatrixBackground />
+             <div className="z-10 flex items-center justify-center w-full">
+                {step === 'title' && <Title />}
+                {step === 'instructions' && <Instructions />}
+                {step === 'specialist' && <SpecialistSelector />}
+             </div>
+        </div>
+    )
+};
 
 
-// --- Componente de Visualización del Avatar Vectorial ---
+// --- COMPONENTES DEL CHAT ---
+const PixelArtLoadingIndicator = ({ status }) => {
+    const thinkingAnim = (
+        <svg width="80" height="20" viewBox="0 0 80 20" className="mx-auto">
+            <rect className="animate-[pulse_1.5s_ease-in-out_infinite]" x="0" y="5" width="10" height="10" fill="#22d3ee" style={{animationDelay: '0s'}} />
+            <rect className="animate-[pulse_1.5s_ease-in-out_infinite]" x="20" y="5" width="10" height="10" fill="#22d3ee" style={{animationDelay: '0.2s'}} />
+            <rect className="animate-[pulse_1.5s_ease-in-out_infinite]" x="40" y="5" width="10" height="10" fill="#e879f9" style={{animationDelay: '0.4s'}} />
+            <rect className="animate-[pulse_1.5s_ease-in-out_infinite]" x="60" y="5" width="10" height="10" fill="#e879f9" style={{animationDelay: '0.6s'}} />
+        </svg>
+    );
 
-const SvgAvatar = ({ status }) => {
-    let svgClasses = 'w-full h-full transition-all duration-300 ease-in-out';
-    let chestLogoClasses = 'animate-[pulse_4s_ease-in-out_infinite]';
+    const imageAnim = (
+        <svg width="48" height="48" viewBox="0 0 24 24" className="mx-auto animate-spin" style={{ animationDuration: '2s' }}>
+            <path fill="#e879f9" d="M0 0h8v8H0z M8 8h8v8H8z M16 16h8v8h-8z" />
+            <path fill="#22d3ee" d="M8 0h8v8H8z M16 8h8v8h-8z M0 16h8v8H0z" />
+        </svg>
+    );
 
+    const speakAnim = (
+        <svg width="60" height="20" viewBox="0 0 60 20" className="mx-auto">
+            <rect x="0" y="10" width="4" height="0" fill="#22d3ee" className="animate-[sound_1s_ease-in-out_infinite] " style={{animationDelay: '0s'}} />
+            <rect x="10" y="10" width="4" height="0" fill="#22d3ee" className="animate-[sound_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
+            <rect x="20" y="10" width="4" height="0" fill="#e879f9" className="animate-[sound_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
+            <rect x="30" y="10" width="4" height="0" fill="#e879f9" className="animate-[sound_1s_ease-in-out_infinite]" style={{animationDelay: '0.6s'}} />
+            <rect x="40" y="10" width="4" height="0" fill="#22d3ee" className="animate-[sound_1s_ease-in-out_infinite]" style={{animationDelay: '0.8s'}} />
+            <rect x="50" y="10" width="4" height="0" fill="#22d3ee" className="animate-[sound_1s_ease-in-out_infinite]" style={{animationDelay: '1.0s'}} />
+        </svg>
+    );
+    
+    let animation;
+    let text;
     switch (status) {
-        case 'loading':
-            svgClasses += ' animate-[glitch_0.5s_linear_infinite]';
-            break;
-        case 'speaking':
-            svgClasses += ' drop-shadow-[0_0_15px_rgba(59,130,246,0.9)]';
-            break;
-        case 'idle':
-        default:
-            svgClasses += ' drop-shadow-[0_0_10px_rgba(167,139,250,0.5)]';
-            break;
+        case 'imagina': animation = imageAnim; text = "Forjando imagen..."; break;
+        case 'speak': animation = speakAnim; text = "Sintetizando voz..."; break;
+        default: animation = thinkingAnim; text = "Procesando...";
     }
 
     return (
-        <>
-            <style>
-                {`
-                    @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
-                    @keyframes glitch { 0% { transform: translate(0); opacity: 1; filter: drop-shadow(0 0 5px #67e8f9); } 25% { transform: translate(-2px, 2px); opacity: 0.8; } 50% { transform: translate(2px, -2px); opacity: 1; } 75% { transform: translate(-2px, -2px); opacity: 0.8; } 100% { transform: translate(0); opacity: 1; filter: drop-shadow(0 0 5px #67e8f9); } }
-                `}
-            </style>
-            <svg viewBox="0 0 48 48" className={svgClasses} shapeRendering="crispEdges">
-                <defs> <filter id="glow"> <feGaussianBlur stdDeviation="1" result="coloredBlur" /> <feMerge> <feMergeNode in="coloredBlur" /> <feMergeNode in="SourceGraphic" /> </feMerge> </filter> </defs>
-                <path d="M14 10 h20 v1 h1 v1 h1 v1 h1 v18 h-1 v1 h-1 v1 h-1 v1 H14 v-1 h-1 v-1 h-1 v-1 V13 h1 v-1 h1 v-1 z" fill="#1E293B" />
-                <path d="M16 13 h16 v1 H16 z M15 14 h1 v11 h-1 z M32 14 h1 v11 h-1 z M16 25 h16 v1 H16 z M19 28 h10 v1 H19 z M18 29 h1 v1 h-1 z M29 29 h1 v1 h-1 z" fill="#3B82F6" fillOpacity="0.3" />
-                <path d="M19 11 h10 v1 h1 v1 h1 v1 h1 v1 h1 v1 h1 v10 h-1 v1 h-1 v1 h-1 v1 h-1 v1 h-1 v1 H20 v-1 h-1 v-1 h-1 v-1 h-1 v-1 h-1 v-1 H15 v-10 h1 v-1 h1 v-1 h1 v-1 h1 v-1 z" fill="#4F46E5" />
-                <path d="M19 11 h10 v1 H19 z M15 17 h1 v1 h-1 z M32 17 h1 v1 h-1 z M19 26 h10 v1 H19 z" fill="#A5B4FC" />
-                <g className={chestLogoClasses} filter="url(#glow)">
-                    <path d="M23 20 h2 v1 h1 v2 h-1 v1 h-2 v-1 h-1 v-2 h1 z" fill="#E0F2FE" />
-                    <path d="M24 21 h1 v2 h-1 z" fill="#38BDF8" />
-                </g>
-                <path d="M21 15 h2 v1 h-2 z M25 15 h2 v1 h-2 z" fill="#E0F2FE" />
-                <path d="M20 18 h8 v1 H20 z" fill="#A5B4FC" fillOpacity="0.5"/>
-            </svg>
-        </>
+        <div className="flex items-center justify-center gap-4 text-fuchsia-400 p-2">
+            {animation}
+            <span className="font-mono">{text}</span>
+        </div>
+    );
+};
+
+const DynamicAvatar = () => {
+    const { mode, isLoading, isProcessing, speakingState } = useContext(AppContext);
+    const [activated, setActivated] = useState(false);
+    const avatarUrl = MODES[mode].avatarUrl;
+
+    useEffect(() => {
+        setActivated(true);
+        const timer = setTimeout(() => setActivated(false), 700);
+        return () => clearTimeout(timer);
+    }, [mode]);
+
+    const getStatus = () => {
+        if (isLoading || (isProcessing && isProcessing !== 'speak')) return 'loading';
+        if (speakingState.status === 'playing' || isProcessing === 'speak') return 'speaking';
+        return 'idle';
+    };
+    const status = getStatus();
+
+    const containerClasses = "relative w-full h-full flex items-center justify-center transition-transform duration-700";
+    let statusContainerClasses = '';
+    let statusImageClasses = 'transition-all duration-500 w-full h-full object-contain';
+
+    if (activated) {
+        statusContainerClasses += ' animate-[pulse_0.7s_ease-in-out]';
+        statusImageClasses += ' drop-shadow-[0_0_25px_rgba(255,255,255,0.9)]';
+    } else {
+        switch (status) {
+            case 'loading':
+                statusContainerClasses += ' animate-[wiggle_1s_ease-in-out_infinite]';
+                statusImageClasses += ' drop-shadow-[0_0_20px_rgba(236,72,153,0.8)]';
+                break;
+            case 'speaking':
+                statusImageClasses += ' drop-shadow-[0_0_25px_rgba(59,130,246,0.9)] scale-105';
+                break;
+            default:
+                statusContainerClasses += ' animate-[float_6s_ease-in-out_infinite]';
+                statusImageClasses += ' drop-shadow-[0_0_15px_rgba(167,139,250,0.6)]';
+                break;
+        }
+    }
+
+    return (
+        <><style>{`
+            @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } } 
+            @keyframes wiggle { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+            @keyframes sound { 0% { height: 2px; y: 9; } 50% { height: 20px; y: 0; } 100% { height: 2px; y: 9; } }
+        `}</style>
+        <div className={`${containerClasses} ${statusContainerClasses}`}>
+            <img src={avatarUrl} alt="Automan.AI Avatar" className={statusImageClasses} onError={(e) => { e.target.src='https://placehold.co/300x400/1E293B/A5B4FC?text=Avatar'; }}/>
+        </div></>
+    );
+};
+
+const Message = ({ msg }) => {
+  const { handleSpeak, speakingState, isProcessing } = useContext(AppContext);
+  const { role, content, type = 'text', id } = msg;
+  const isUser = role === 'user', isSystem = role === 'system', isAssistant = role === 'assistant';
+  
+  const prefix = isUser ? '[USUARIO]' : isSystem ? '[SISTEMA]' : '[AUTOMAN]';
+  const textColor = isUser ? 'text-cyan-300' : isSystem ? 'text-yellow-300' : 'text-fuchsia-400';
+  const prefixColor = isUser ? 'text-green-400' : isSystem ? 'text-yellow-400' : 'text-pink-500';
+  
+  const isGeneratingAudio = speakingState.id === id && speakingState.status === 'generating';
+  const isPlayingAudio = speakingState.id === id && speakingState.status === 'playing';
+
+  if (type === 'image') {
+    return (
+      <div className="mb-4 animate-[fadeIn_0.5s_ease-out]">
+        <strong className="text-pink-500 font-bold">[AUTOMAN] &gt; </strong>
+        <span className="text-fuchsia-400">¡Claro! Aquí tienes la imagen que pediste:</span>
+        <div className="mt-2 p-1 border-2 border-fuchsia-400/50 rounded-lg bg-slate-800/50 max-w-sm pixel-border">
+          <img src={content} alt="Generated by Automan.AI" className="rounded-md w-full h-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'summary') {
+    return (
+      <div className="my-4 p-4 bg-slate-800/70 border-l-4 border-yellow-300 rounded-r-lg animate-[fadeIn_0.5s_ease-out]">
+        <strong className="text-yellow-300 font-bold">[RESUMEN DE LA CONVERSACIÓN]</strong>
+        <p className="text-slate-300 whitespace-pre-wrap mt-2">{content}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex items-start gap-3 mb-3 animate-[fadeIn_0.5s_ease-out] ${textColor}`}>
+      <div className="flex-shrink-0 pt-0.5"><strong className={`${prefixColor} font-bold`}>{prefix} &gt; </strong></div>
+      <div className="flex-grow flex items-start justify-between gap-4">
+        <span className="whitespace-pre-wrap break-words min-w-0">{content}</span>
+        {isAssistant && type === 'text' && (
+          <button onClick={() => handleSpeak(id, content)} disabled={isProcessing === 'speak'} className="flex-shrink-0 w-6 h-6 text-cyan-300 hover:text-cyan-100 disabled:text-slate-500 disabled:cursor-wait transition-colors">
+            {isGeneratingAudio ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div> : isPlayingAudio ? '🎶' : '🔊'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ChatInterface = () => {
+    const { mode, messages, isLoading, isProcessing, addMessage, setIsLoading, setIsProcessing, setAppState, setMessages, setMode } = useContext(AppContext);
+    const [input, setInput] = useState('');
+    const consoleEndRef = useRef(null);
+    const [activeSuperpower, setActiveSuperpower] = useState(null);
+    const inputRef = useRef(null);
+
+    useEffect(() => { consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+    useEffect(() => {
+        if (activeSuperpower) {
+            inputRef.current?.focus();
+        }
+    }, [activeSuperpower]);
+
+    const handleCommand = async (command, args) => {
+        const fullCommand = `/${command} ${args}`.trim();
+        addMessage({ role: 'user', content: fullCommand });
+        setIsProcessing(command);
+       
+        try {
+            switch (command) {
+                case 'ayuda':
+                    const helpText = `Comandos disponibles:\n- /ayuda → Muestra esta ayuda.\n- /limpiar → Borra la conversación actual.\n- /imagina [texto] → Genera una imagen.\n- /curiosidad → Pide un dato curioso.\n- /resumen → Resume la conversación.\n- /exportar → Descarga la conversación en .txt.\n- /borrar_historial → Limpia todo el historial guardado.\n- ...y todos los superpoderes del especialista actual.`;
+                    addMessage({ role: 'system', content: helpText });
+                    break;
+                case 'limpiar':
+                    setMessages(prev => prev.filter(m => m.role === 'system' && m.content.startsWith('Modo')));
+                    addMessage({ role: 'system', content: 'Conversación borrada.' });
+                    break;
+                case 'imagina':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes proporcionar una descripción para la imagen.' }); break; }
+                    await actionGenerateImage(args);
+                    return;
+                case 'curiosidad':
+                    await actionGetCuriosity();
+                    return;
+                case 'resumen':
+                    await handleSummarize();
+                    return;
+                case 'exportar':
+                    actionExportChat();
+                    break;
+                case 'borrar_historial':
+                    localStorage.removeItem('automan_chat_history');
+                    setMessages([INITIAL_MESSAGE]);
+                    addMessage({ role: 'system', content: 'Historial completo borrado. La próxima vez que recargues, empezarás de cero.' });
+                    break;
+                // --- Nuevos Comandos ---
+                case 'interpreta':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes describir el sueño para que el Oráculo lo interprete.' }); break; }
+                    await actionInterpretDream(args);
+                    return;
+                case 'tendencias':
+                    await actionGetTrends();
+                    return;
+                case 'formula':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar sobre qué quieres una fórmula.' }); break; }
+                    await actionGetFormula(args);
+                    return;
+                case 'hipotesis':
+                     if (!args) { addMessage({ role: 'system', content: 'Debes indicar sobre qué quieres una hipótesis.' }); break; }
+                    await actionGetHypothesis(args);
+                    return;
+                case 'experimento':
+                     if (!args) { addMessage({ role: 'system', content: 'Debes indicar qué quieres probar.' }); break; }
+                    await actionGetExperiment(args);
+                    return;
+                case 'codigo':
+                     if (!args) { addMessage({ role: 'system', content: 'Debes describir qué código necesitas.' }); break; }
+                    await actionGetCode(args);
+                    return;
+                case 'debug':
+                     if (!args) { addMessage({ role: 'system', content: 'Debes pegar el código a debuggear.' }); break; }
+                    await actionDebugCode(args);
+                    return;
+                case 'optimiza':
+                     if (!args) { addMessage({ role: 'system', content: 'Debes pegar el código a optimizar.' }); break; }
+                    await actionOptimizeCode(args);
+                    return;
+                case 'juego':
+                    await actionGetGame();
+                    return;
+                case 'acertijo':
+                    await actionGetRiddle();
+                    return;
+                case 'explica':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar qué tema quieres que te explique.' }); break; }
+                    await actionExplainTopic(args);
+                    return;
+                case 'plan':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar para qué tema necesitas un plan.' }); break; }
+                    await actionGetStudyPlan(args);
+                    return;
+                case 'prueba':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar de qué tema quieres la prueba.' }); break; }
+                    await actionGetTest(args);
+                    return;
+                case 'chiste':
+                    await actionGetJoke();
+                    return;
+                case 'consejo':
+                    await actionGetAdvice();
+                    return;
+                case 'parche':
+                    await actionGetPlan();
+                    return;
+                case 'apreciar':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar qué obra de arte quieres apreciar.' }); break; }
+                    await actionAppreciateArt(args);
+                    return;
+                case 'hottake':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar sobre qué tema quieres un hot take.' }); break; }
+                    await actionGetHotTake(args);
+                    return;
+                case 'profecia':
+                    if (!args) { addMessage({ role: 'system', content: 'Debes indicar sobre qué quieres una profecía.' }); break; }
+                    await actionGetProphecy(args);
+                    return;
+                case 'dilema':
+                    await actionGetDilemma();
+                    return;
+                default:
+                    addMessage({ role: 'system', content: `Comando desconocido: /${command}. Escribe /ayuda para ver la lista.` });
+                    break;
+            }
+        } catch (error) {
+            addMessage({ role: 'system', content: `Error al procesar el comando /${command}: ${error.message}` });
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const handleSend = async () => {
+        const trimmedInput = input.trim();
+        if (!trimmedInput || isLoading || isProcessing) return;
+        
+        if (activeSuperpower) {
+            const power = SUPERPOWER_CONFIG[activeSuperpower];
+            handleCommand(power.command.slice(1), trimmedInput);
+            setActiveSuperpower(null);
+            setInput('');
+            return;
+        }
+
+        setInput('');
+        if (trimmedInput.startsWith('/')) {
+            const [command, ...args] = trimmedInput.slice(1).split(' ');
+            handleCommand(command.toLowerCase(), args.join(' '));
+            return;
+        }
+
+        addMessage({ role: 'user', content: trimmedInput });
+        setIsLoading(true);
+        const systemPrompt = { role: 'user', parts: [{ text: `System instruction: ${MODES[mode].prompt}` }] };
+        const aiModelInstruction = { role: 'model', parts: [{ text: "Entendido. Actuaré como se me ha instruido." }] };
+        const chatHistory = [systemPrompt, aiModelInstruction, ...messages.filter(msg => (msg.role === 'user' || msg.role === 'assistant') && (!msg.type || msg.type === 'text')).map(msg => ({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })), { role: 'user', parts: [{ text: trimmedInput }] }];
+        try {
+            const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: chatHistory }) });
+            if (!response.ok) throw new Error(`API de chat con error: ${response.statusText}`);
+            const result = await response.json();
+            const aiResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            addMessage({ role: 'assistant', content: aiResponseText || "Lo siento, no he podido generar una respuesta." });
+        } catch (err) {
+            addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error en la conexión: ${err.message}` });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const actionGeneric = async (prompt, commandName) => {
+        try {
+            const payload = { contents: [{ role: 'user', parts: [{ text: `System instruction: ${MODES[mode].prompt}` }] }, { role: 'model', parts: [{ text: "Entendido." }] }, { role: 'user', parts: [{ text: prompt }] }] };
+            const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API con error: ${response.statusText}`);
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) { addMessage({ role: 'assistant', content: text }); } else { throw new Error(`No se pudo obtener una respuesta para ${commandName}.`); }
+        } catch (err) {
+            addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error en ${commandName}: ${err.message}` });
+        } finally { setIsProcessing(null); }
+    };
+
+    // --- Definición de todas las acciones de superpoderes ---
+    const actionGetCuriosity = () => actionGeneric(`Dame un dato curioso o una anécdota interesante y poco conocida relacionada con mi modo actual: ${MODES[mode].label}. Sé breve, directo y sorprendente.`, 'curiosidad');
+    const actionInterpretDream = (dream) => actionGeneric(`Interpreta el siguiente sueño como lo haría un oráculo misterioso y filosófico: "${dream}"`, 'interpretar sueño');
+    const actionGetTrends = () => actionGeneric("Como un experto en cultura de internet, cuéntame sobre un meme, tendencia o debate viral reciente. Usa jerga de internet y un tono muy actual.", 'tendencias');
+    const actionGetFormula = (topic) => actionGeneric(`Proporciona la fórmula clave para "${topic}" y una breve explicación de sus componentes.`, 'fórmula');
+    const actionGetHypothesis = (phenomenon) => actionGeneric(`Formula una hipótesis científica intrigante sobre "${phenomenon}".`, 'hipótesis');
+    const actionGetExperiment = (concept) => actionGeneric(`Diseña un experimento simple y seguro que se podría hacer en casa para demostrar o explorar el concepto de "${concept}".`, 'experimento');
+    const actionGetCode = (request) => actionGeneric(`Genera un snippet de código para resolver esto: "${request}". Incluye comentarios y asume un lenguaje de programación apropiado si no se especifica.`, 'código');
+    const actionDebugCode = (code) => actionGeneric(`Analiza el siguiente código, identifica el posible error y sugiere una corrección con una explicación: \n\`\`\`\n${code}\n\`\`\``, 'debug');
+    const actionOptimizeCode = (code) => actionGeneric(`Revisa el siguiente código y sugiere cómo podría optimizarse para mayor eficiencia o legibilidad: \n\`\`\`\n${code}\n\`\`\``, 'optimización');
+    const actionGetGame = () => actionGeneric("Sugiere un juego de palabras o un pequeño reto mental para pasar el rato.", 'juego');
+    const actionGetRiddle = () => actionGeneric("Plantea un acertijo ingenioso.", 'acertijo');
+    const actionExplainTopic = (topic) => actionGeneric(`Explica el tema de "${topic}" de una manera clara, estructurada y fácil de entender, como si fueras el mejor profesor.`, 'explicación');
+    const actionGetStudyPlan = (topic) => actionGeneric(`Crea un plan de estudio simple de 5 pasos para alguien que quiere empezar a aprender sobre "${topic}".`, 'plan de estudio');
+    const actionGetTest = (topic) => actionGeneric(`Crea una prueba rápida de 3 preguntas de opción múltiple sobre "${topic}" para evaluar el conocimiento básico. Proporciona las respuestas correctas al final.`, 'prueba rápida');
+    const actionGetJoke = () => actionGeneric("Parce, échese un chiste bien bacano, de esos que son bien charros.", 'chiste');
+    const actionGetAdvice = () => actionGeneric("Parce, necesito un consejo. Tíreme pues la buena, ¿qué me aconseja para la vida?", 'consejo');
+    const actionGetPlan = () => actionGeneric("¿Qué más pues? Recomiéndeme un parche bien bacano para hacer con los amigos por aquí en Medallo.", 'parche');
+    const actionAppreciateArt = (artwork) => actionGeneric(`Realiza una apreciación artística sobre la siguiente obra: "${artwork}". Describe sus cualidades, lo que te inspira y su posible contexto.`, 'apreciación de arte');
+    const actionGetHotTake = (topic) => actionGeneric(`Dame un "hot take" o una opinión controversial pero defendible sobre "${topic}", al estilo de un influencer de internet.`, 'hot take');
+    const actionGetProphecy = (subject) => actionGeneric(`En tu rol de Oráculo, revela una profecía críptica y ambigua sobre el futuro de "${subject}".`, 'profecía');
+    const actionGetDilemma = () => actionGeneric("Plantea un dilema filosófico profundo que invite a la reflexión sobre la moralidad y la existencia.", 'dilema');
+
+    const actionGenerateImage = async (prompt) => {
+        addMessage({ role: 'system', content: `Generando imagen para: "${prompt}"...` });
+        try {
+            const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
+            const response = await fetch(IMAGE_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API de imagen con error: ${response.statusText}`);
+            const result = await response.json();
+            const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+            if (base64Data) {
+                addMessage({ role: 'assistant', type: 'image', content: `data:image/png;base64,${base64Data}` });
+            } else { throw new Error("No se recibió una imagen válida."); }
+        } catch (err) {
+            addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error al generar imagen: ${err.message}` });
+        } finally { setIsProcessing(null); }
+    };
+
+    const handleSummarize = async () => {
+        const conversation = messages.filter(m => (m.role === 'user' || m.role === 'assistant') && (!m.type || m.type === 'text')).map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`).join('\n');
+        if (conversation.length < 50) { addMessage({ role: 'system', content: 'El chat es demasiado corto para resumir.' }); setIsProcessing(null); return; }
+        const summaryPrompt = `Resume la siguiente conversación en 3-4 puntos clave, capturando la esencia del diálogo:\n\n---\n${conversation}\n---`;
+        try {
+            const payload = { contents: [{ parts: [{ text: summaryPrompt }] }] };
+            const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API con error: ${response.statusText}`);
+            const result = await response.json();
+            const summaryText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (summaryText) { addMessage({ role: 'assistant', type: 'summary', content: summaryText }); } else { throw new Error("No se pudo generar el resumen."); }
+        } catch (err) {
+            addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error al resumir: ${err.message}` });
+        } finally { setIsProcessing(null); }
+    };
+
+    const actionExportChat = () => {
+        const chatText = messages.map(m => `[${new Date().toISOString()}] [${m.role.toUpperCase()}] ${m.type === 'image' ? '[IMAGEN GENERADA]' : m.content}`).join('\n');
+        const blob = new Blob([chatText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `automan_chat_${new Date().toISOString()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addMessage({ role: 'system', content: 'Conversación exportada como archivo de texto.' });
+    };
+
+    const handleSuperpowerClick = (powerKey) => {
+        const power = SUPERPOWER_CONFIG[powerKey];
+        if (power.requiresArg) {
+            setActiveSuperpower(powerKey);
+        } else {
+            handleCommand(power.command.slice(1), '');
+        }
+    };
+
+    const cancelSuperpower = () => {
+        setActiveSuperpower(null);
+        setInput('');
+    };
+
+    const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+
+    return (
+        <div className="bg-slate-900 font-mono h-screen flex flex-col lg:flex-row p-2 sm:p-4 selection:bg-fuchsia-500 selection:text-white gap-4">
+            <div className="flex flex-col flex-grow w-full lg:w-2/3 h-full min-h-0">
+                <header className="border-b-2 border-cyan-400/30 pb-4 mb-4 flex-shrink-0">
+                    <div className="flex flex-wrap justify-between items-center gap-y-2">
+                        <div>
+                            <h1 className="text-2xl font-bold text-cyan-300 drop-shadow-[0_0_5px_#22d3ee]"> // Automan.AI_ </h1>
+                            <p className="text-sm text-cyan-400/80">Modo actual: {MODES[mode].label}</p>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <button onClick={() => setAppState('welcome')} disabled={isLoading || isProcessing} className="px-3 py-2 text-xs sm:text-sm rounded-md transition-all duration-200 border bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600 hover:border-slate-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                &larr; Volver
+                            </button>
+                            <button onClick={() => handleCommand('resumen', '')} disabled={isLoading || isProcessing} className="px-3 py-2 text-xs sm:text-sm rounded-md transition-all duration-200 border bg-yellow-500/20 border-yellow-400/50 text-yellow-300 hover:bg-yellow-500/40 hover:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isProcessing === 'resumen' ? 'Resumiendo...' : '✨ Resumir'}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                <main className="flex-grow bg-black/30 rounded-lg border border-slate-700 p-4 overflow-y-auto mb-4">
+                    {messages.map(msg => <Message key={msg.id} msg={msg} />)}
+                    {(isLoading || isProcessing) && <PixelArtLoadingIndicator status={isProcessing || 'thinking'} />}
+                    <div ref={consoleEndRef} />
+                </main>
+                <footer className="flex-shrink-0">
+                    <div className="relative">
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={activeSuperpower ? SUPERPOWER_CONFIG[activeSuperpower].placeholder : (isLoading || isProcessing ? "..." : "Escribe tu mensaje o comando aquí... (ej: /ayuda)")}
+                            disabled={isLoading || isProcessing}
+                            className={`w-full bg-slate-800 border-2 rounded-lg p-3 pr-24 text-slate-200 focus:ring-2 focus:ring-cyan-400/50 outline-none transition-all resize-none ${activeSuperpower ? 'border-fuchsia-500' : 'border-slate-600 focus:border-cyan-400'}`}
+                            rows="2"
+                        />
+                        <button onClick={handleSend} disabled={!input.trim() || isLoading || isProcessing} className="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 rounded-md bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
+                             {activeSuperpower ? 'Activar' : 'Enviar'}
+                        </button>
+                    </div>
+                     <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {activeSuperpower && (
+                            <button onClick={cancelSuperpower} className="px-3 py-1 text-xs rounded-md bg-red-500/80 text-white hover:bg-red-600">
+                                Cancelar
+                            </button>
+                        )}
+                        {MODES[mode].superpowers?.map(powerKey => (
+                            <button key={powerKey} onClick={() => handleSuperpowerClick(powerKey)} disabled={isLoading || isProcessing || activeSuperpower}
+                                className="px-3 py-1 text-xs rounded-md transition-all duration-200 border bg-fuchsia-500/20 border-fuchsia-400/50 text-fuchsia-300 hover:bg-fuchsia-500/40 hover:border-fuchsia-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {SUPERPOWER_CONFIG[powerKey].label}
+                            </button>
+                        ))}
+                    </div>
+                </footer>
+            </div>
+            <aside className="w-full lg:w-1/3 flex flex-col gap-4">
+                <div className="h-64 sm:h-80 lg:flex-grow relative border-2 border-slate-700 rounded-lg bg-black/20 p-4 pixel-border">
+                    <DynamicAvatar />
+                </div>
+                <div className="bg-black/30 rounded-lg border border-slate-700 p-4 flex-shrink-0">
+                    <h2 className="text-lg font-bold text-cyan-300 mb-3">Modos del Asistente</h2>
+                    <nav className="flex flex-wrap gap-2">
+                        {Object.keys(MODES).map((key) => (
+                            <button 
+                                key={key} 
+                                onClick={() => { if(mode !== key) setMode(key); }}
+                                disabled={isLoading || isProcessing}
+                                className={`px-3 py-1 text-sm rounded-md transition-all duration-200 border ${mode === key ? 'bg-cyan-400 text-slate-900 font-bold border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]' : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700 hover:border-cyan-400 disabled:opacity-50'}`}
+                            >
+                                {MODES[key].label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            </aside>
+        </div>
     );
 };
 
 
-// --- Componentes de la UI ---
-
-const Message = ({ msg, onSpeak, speakingState }) => {
-  const { role, content, type = 'text', id } = msg;
-  const isUser = role === 'user', isSystem = role === 'system';
-  const prefix = isUser ? '[USER]' : isSystem ? '[SYSTEM]' : '[AUTOMAN]';
-  const textColor = isUser ? 'text-cyan-300' : isSystem ? 'text-yellow-300' : 'text-fuchsia-400';
-  const prefixColor = isUser ? 'text-green-400' : isSystem ? 'text-yellow-400' : 'text-pink-500';
-  const isGenerating = speakingState.id === id && speakingState.status === 'generating';
-  const isPlaying = speakingState.id === id && speakingState.status === 'playing';
-
-  if (type === 'image') { return ( <div className="mb-2"> <strong className="text-pink-500 font-bold">[AUTOMAN] &gt; </strong> <span className="text-fuchsia-400">Aquí está la imagen que pediste:</span> <div className="mt-2 p-2 border border-cyan-400/50 rounded-lg bg-slate-800/50 max-w-sm"> <img src={content} alt="Generated by Automan.AI" className="rounded-md w-full h-auto" /> </div> </div> ); }
-  if (type === 'summary') { return ( <div className="my-4 p-3 bg-slate-800/70 border-l-4 border-yellow-300 rounded-r-lg"> <strong className="text-yellow-300 font-bold">[RESUMEN]</strong> <p className="text-slate-300 whitespace-pre-wrap mt-1">{content}</p> </div> ); }
-
-  return (
-    <div className={`flex items-start gap-2 mb-2 ${textColor}`}>
-      <div className="flex-shrink-0"><strong className={`${prefixColor} font-bold`}>{prefix} &gt; </strong></div>
-      <div className="flex-grow flex items-start justify-between gap-4">
-        <span className="whitespace-pre-wrap">{content}</span>
-        {!isUser && !isSystem && type === 'text' && ( <button onClick={() => onSpeak(id, content)} disabled={isGenerating || isPlaying} className="flex-shrink-0 w-6 h-6 text-cyan-300 hover:text-cyan-100 disabled:text-slate-500 disabled:cursor-wait"> {isGenerating ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div> : isPlaying ? '🎶' : '🔊'} </button> )}
-      </div>
-    </div>
-  );
-};
-
-
 // --- Componente Principal ---
-
-export default function AutomanAssistant() {
-  const [mode, setMode] = useState('art');
-  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(null);
-  const [speakingState, setSpeakingState] = useState({ id: null, status: 'idle' });
-  const consoleEndRef = useRef(null);
-  const audioRef = useRef(null);
-  const nextId = useRef(2);
-
-  useEffect(() => { consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-  
-  const base64ToArrayBuffer = (base64) => { const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); } return bytes.buffer; };
-  const pcmToWav = (pcmData, sampleRate) => { const numChannels = 1, bitsPerSample = 16; const byteRate = sampleRate * numChannels * (bitsPerSample / 8); const blockAlign = numChannels * (bitsPerSample / 8); const dataSize = pcmData.length * (bitsPerSample / 8); const chunkSize = 36 + dataSize; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); view.setUint32(0, 0x52494646, false); view.setUint32(4, chunkSize, true); view.setUint32(8, 0x57415645, false); view.setUint32(12, 0x666d7420, false); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); view.setUint32(36, 0x64617461, false); view.setUint32(40, dataSize, true); const pcm16 = new Int16Array(pcmData); for (let i = 0; i < pcm16.length; i++) { view.setInt16(44 + i * 2, pcm16[i], true); } return new Blob([view], { type: 'audio/wav' }); };
-  const addMessage = (message) => { setMessages(prev => [...prev, { ...message, id: nextId.current++ }]); };
-  
-  // FIX: Se restauran las funciones de acción que habían sido eliminadas.
-  const actionGenerateImage = async (prompt) => {
-    try {
-      const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
-      const response = await fetch(IMAGE_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!response.ok) throw new Error(`API de imagen error: ${response.statusText}`);
-      const result = await response.json();
-      const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
-      if (base64Data) {
-        addMessage({ role: 'assistant', type: 'image', content: `data:image/png;base64,${base64Data}` });
-      } else {
-        throw new Error("No se recibió una imagen válida.");
-      }
-    } catch (err) {
-      addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error al generar imagen: ${err.message}` });
-    }
-  };
-
-  const actionGetCuriosity = async () => {
-    try {
-      const prompt = "Cuéntame un dato curioso, interesante y sorprendente en una sola frase corta.";
-      const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-      if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-      const result = await response.json();
-      const curiosityText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      addMessage({ role: 'assistant', content: curiosityText || "No pude encontrar una curiosidad." });
-    } catch (err) {
-      addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error al buscar curiosidad: ${err.message}` });
-    }
-  };
-
-  const handleCommand = async (command, args) => {
-    addMessage({ role: 'user', content: `/${command} ${args}` });
-    setIsProcessing(command);
-    try {
-        switch (command) {
-            case 'ayuda':
-                const helpText = `Comandos disponibles:\n- /ayuda: Muestra esta lista de comandos.\n- /limpiar: Limpia la consola de mensajes.\n- /imagina [prompt]: Genera una imagen.\n- /curiosidad: Te cuenta un dato curioso.`;
-                addMessage({ role: 'system', content: helpText });
-                break;
-            case 'limpiar':
-                setMessages([INITIAL_MESSAGE]);
-                break;
-            case 'imagina':
-                if (!args) { addMessage({ role: 'system', content: 'Debes proporcionar una descripción. Ejemplo: /imagina un gato con sombrero.' }); break; }
-                await actionGenerateImage(args);
-                break;
-            case 'curiosidad':
-                await actionGetCuriosity();
-                break;
-            default:
-                addMessage({ role: 'system', content: `Comando desconocido: /${command}.` });
-                break;
-        }
-    } catch (error) {
-        console.error(`Error al ejecutar el comando ${command}:`, error);
-        addMessage({ role: 'system', content: `Error al procesar el comando /${command}.` });
-    } finally {
-        setIsProcessing(null);
-    }
-  };
-
-  const handleSend = async () => {
-    const trimmedInput = input.trim();
-    if (!trimmedInput || isLoading || isProcessing) return;
-    setInput('');
-    if (trimmedInput.startsWith('/')) {
-      const [command, ...args] = trimmedInput.slice(1).split(' ');
-      handleCommand(command.toLowerCase(), args.join(' '));
-      return;
-    }
-    addMessage({ role: 'user', content: trimmedInput });
-    setIsLoading(true);
-    const systemPrompt = { role: 'user', parts: [{ text: `System instruction: ${MODES[mode].prompt}` }] };
-    const aiModelInstruction = { role: 'model', parts: [{ text: "OK, I will act as instructed." }] };
-    const chatHistory = [systemPrompt, aiModelInstruction, ...messages.map(msg => ({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })), { role: 'user', parts: [{ text: trimmedInput }] }];
-    try {
-      const response = await fetch(CHAT_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: chatHistory }) });
-      if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-      const result = await response.json();
-      const aiResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      addMessage({ role: 'assistant', content: aiResponseText || "No se recibió una respuesta válida." });
-    } catch (err) {
-      addMessage({ role: 'assistant', content: `\u26A0\uFE0F Error en chat: ${err.message}` });
-    } finally { setIsLoading(false); }
-  };
-
-  const handleSummarize = async () => { /* Implementación pendiente */ };
-  
-  const handleSpeak = async (id, text) => {
-    if (speakingState.status !== 'idle') return;
-    setSpeakingState({ id, status: 'generating' });
-    try {
-        const payload = { contents: [{ parts: [{ text }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zubenelgenubi" } } } }, model: "gemini-2.5-flash-preview-tts" };
-        const response = await fetch(TTS_MODEL_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (!response.ok) throw new Error(`TTS API error: ${response.statusText}`);
-        const result = await response.json();
-        const part = result?.candidates?.[0]?.content?.parts?.[0];
-        const audioData = part?.inlineData?.data;
-        const mimeType = part?.inlineData?.mimeType;
-        if (audioData && mimeType?.startsWith("audio/")) {
-            const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
-            const pcmData = base64ToArrayBuffer(audioData);
-            const pcm16 = new Int16Array(pcmData);
-            const wavBlob = pcmToWav(pcm16, sampleRate);
-            const audioUrl = URL.createObjectURL(wavBlob);
-            if (audioRef.current) {
-                audioRef.current.src = audioUrl;
-                audioRef.current.play();
-                setSpeakingState({ id, status: 'playing' });
-                audioRef.current.onended = () => { setSpeakingState({ id: null, status: 'idle' }); URL.revokeObjectURL(audioUrl); };
-            }
-        } else { throw new Error("Respuesta de audio inválida."); }
-    } catch (err) {
-        console.error("Error generating speech:", err);
-        addMessage({ role: 'system', content: `\u26A0\uFE0F Error de audio: ${err.message}` });
-        setSpeakingState({ id: null, status: 'idle' });
-    }
-  };
-
-  const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
-
-  const getAssistantStatus = () => { if(isLoading || isProcessing) return 'loading'; if(speakingState.status === 'playing') return 'speaking'; return 'idle'; };
-  const assistantStatus = getAssistantStatus();
-  const anyLoading = isLoading || isProcessing;
-
-  return (
-    <div className="bg-slate-900 text-green-300 font-mono min-h-screen flex p-4 selection:bg-fuchsia-500 selection:text-white gap-4">
-      <audio ref={audioRef} hidden />
-      <div className="flex flex-col flex-grow w-2/3">
-          <header className="border-b-2 border-cyan-400/30 pb-4 mb-4">
-            <div className="flex justify-between items-start">
-                <div> <h1 className="text-2xl font-bold text-cyan-300 drop-shadow-[0_0_5px_rgba(0,255,255,0.5)]"> // Automan.AI Assistant // </h1> <p className="text-sm text-cyan-400/80">Modo actual: {MODES[mode].label}</p> </div>
-                <button onClick={handleSummarize} disabled={anyLoading} className="px-3 py-2 text-sm rounded-md transition-all duration-200 border bg-yellow-500/20 border-yellow-400/50 text-yellow-300 hover:bg-yellow-500/40 hover:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"> {isProcessing === 'summary' ? 'Resumiendo...' : '✨ Resumir Chat'} </button>
-            </div>
-          </header>
-          <main className="flex-grow bg-black/30 rounded-lg border border-slate-700 p-4 overflow-y-auto h-80 shadow-inner">
-            {messages.map((msg) => ( <Message key={msg.id} msg={msg} onSpeak={handleSpeak} speakingState={speakingState} /> ))}
-            {isLoading && <div className="text-yellow-300 animate-pulse"><strong>[AUTOMAN] &gt; </strong>Procesando...</div>}
-            <div ref={consoleEndRef} />
-          </main>
-          <footer className="mt-4">
-            <div className="flex flex-col gap-3">
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} className="w-full p-3 bg-slate-800 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 resize-none" placeholder="Escribe un mensaje o un comando (ej: /ayuda)..." rows={3} disabled={anyLoading} />
-              <div className="flex gap-3 justify-end items-center">
-                {mode === 'art' && ( <button onClick={() => input.trim() && handleCommand('imagina', input.trim())} disabled={anyLoading || !input.trim()} className="flex items-center gap-2 bg-fuchsia-500 px-4 py-2 rounded-md text-slate-900 font-bold transition-all duration-200 hover:bg-fuchsia-400 hover:shadow-[0_0_15px_rgba(217,70,239,0.7)] disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed disabled:shadow-none"> {isProcessing === 'imagina' ? ( <> <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div> <span>Generando...</span> </> ) : ( <>✨ Generar Imagen</> )} </button> )}
-                <button onClick={handleSend} disabled={anyLoading || !input.trim()} className="flex items-center gap-2 bg-cyan-500 px-4 py-2 rounded-md text-slate-900 font-bold transition-all duration-200 hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(0,255,255,0.7)] disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed disabled:shadow-none"> <span>Enviar</span> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> </button>
-              </div>
-            </div>
-          </footer>
-      </div>
-      <div className="flex flex-col w-1/3 max-w-sm gap-4">
-          <div className="flex-grow bg-black/20 rounded-lg border border-slate-700/50 p-4 relative flex items-center justify-center">
-              <SvgAvatar status={assistantStatus} />
-              <div className="absolute top-2 left-3 text-xs text-cyan-400/50">[VISUALIZACIÓN VECTORIAL]</div>
-          </div>
-          <div className="bg-black/30 rounded-lg border border-slate-700 p-4">
-              <h2 className="text-lg font-bold text-cyan-300 mb-3">Modos del Asistente</h2>
-              <nav className="flex flex-wrap gap-2">
-                {Object.keys(MODES).map((key) => ( <button key={key} onClick={() => setMode(key)} className={`px-3 py-1 text-sm rounded-md transition-all duration-200 border ${mode === key ? 'bg-cyan-400 text-slate-900 font-bold border-cyan-400 shadow-[0_0_10px_rgba(0,255,255,0.6)]' : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700 hover:border-cyan-400'}`}> {MODES[key].label} </button> ))}
-              </nav>
-          </div>
-      </div>
-    </div>
-  );
+export default function App() {
+    return (
+        <AppProvider>
+            <GlobalStyles />
+            <MainController />
+        </AppProvider>
+    );
 }
+
+const MainController = () => {
+    const { appState, audioRef } = useContext(AppContext);
+
+    return (
+        <div className="w-full min-h-screen bg-bg-dark">
+            <audio ref={audioRef} hidden />
+            {appState === 'welcome' && <WelcomeFlow />}
+            {appState === 'chat' && <ChatInterface />}
+        </div>
+    );
+};
